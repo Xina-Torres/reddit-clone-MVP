@@ -7,28 +7,46 @@
 //
 
 import Foundation
+import UIKit
+import SVProgressHUD
 
-protocol RedditView {
-    func showLoadRedditDataSuccess()
-    func showLoadRedditDataError()
+protocol RedditPresenterDelegate {
+    func showLoadingReddit()
+    func showReddit(_ reddits: [RedditDataModel])
+    func showRedditError(_ errorString: String)
 }
 
-class RedditPresenter{
+class RedditPresenter {
     
-    var view: RedditListView
+    // MARK: - Properties
+    
     var redditRepository: RedditRepository
+    var view: RedditPresenterDelegate
     
-    required init(view: RedditListView, redditRepository: RedditRepository){
+    // MARK: - Functions
+    
+    required init(view: RedditPresenterDelegate, redditRepository: RedditRepository){
         self.view = view
         self.redditRepository = redditRepository
     }
     
     func loadRedditData(keywords: String) {
-        redditRepository.getRedditData_New(keywords: keywords) { (redditDataModelArray) in
-            self.view.updateUIWithRedditData(anyObject: redditDataModelArray!)
+        // 1 - show loading
+        self.view.showLoadingReddit()
+        
+        // 2 - async network call
+        redditRepository.getRedditData_New(keywords: keywords, success: { reddits in
             
-            dump(redditDataModelArray)
-        }
+            // 3 - success, call showReddit
+            self.view.showReddit(reddits)
+            
+        }, error: { error in
+            
+            // 4 - failure, show error
+            
+            self.view.showRedditError(error)
+        })
     }
-    
 }
+
+

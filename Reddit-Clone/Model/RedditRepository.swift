@@ -9,12 +9,6 @@
 import Foundation
 import Alamofire
 import SwiftyJSON
-
-//
-//func handlerSamle(d: Data?, status: Int, err: Error) {
-//    
-//}
-
 class RedditRepository{
     
     var reddit = [RedditDataModel]()
@@ -22,30 +16,24 @@ class RedditRepository{
     var subs = [SubscribeDataModel]()
     
     typealias RedditDataHandling = (([RedditDataModel]?) -> Void)
-    typealias Completion = ((_ data: Data?, _ status: Int,_ error: Error?) -> Void)
-    
-//    var defaultURL = "https://api.reddit.com/r/aww/"
+    typealias Completion = ((_ data: Data?, _ status: Int,_ error: Error?) -> Bool)
     let baseURL = "https://api.reddit.com/r/"
     
-//    let finalKeywords = keywords?.replacingOccurrences(of: " ", with: "+").lowercased()
-//    let searchURL = "https://api.reddit.com/r/" + finalKeywords
-    
-    func getRedditData_New(keywords: String?, completion: @escaping RedditDataHandling) {
-
+    func getRedditData_New(keywords: String?,
+                           success: @escaping (([RedditDataModel]) -> Void),
+                           error: @escaping ((String) -> Void)) {
         let checkedKeyword = (keywords == "") ? "aww" : keywords
         let finalKeywords = checkedKeyword?.replacingOccurrences(of: " ", with: "+").lowercased()
         let searchURL = URL.init(string: baseURL + (finalKeywords ?? ""))!
         let r = Alamofire.request(searchURL, method: .get)
-        r.responseJSON { (response) in
+        r.responseJSON{ (response) in
             switch response.result {
             case .success(_):
-                
                 let redditJSON : JSON = JSON(response.result.value!)
                 self.storeRedditData(json: redditJSON)
-                completion(self.reddit)
-                
-            case .failure(let error):
-                completion(nil)
+                success(self.reddit)
+            case .failure(let e):
+                error(e.localizedDescription)
             }
         }
     }
@@ -77,7 +65,5 @@ class RedditRepository{
                 anyObject.append(reddit[i])
             }
         }
-        
-        print("In Reddit Model: \(anyObject.count)")
     }
 }

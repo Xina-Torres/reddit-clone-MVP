@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  RedditListVC.swift
 //  Reddit-Clone
 //
 //  Created by Maria Xina Rae Torres on 17/04/2018.
@@ -7,12 +7,15 @@
 //
 
 import UIKit
+import Foundation
 import Alamofire
 import SwiftyJSON
 import Kingfisher
+import SVProgressHUD
 
-class RedditListView: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchBarDelegate{
+class RedditListVC: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchBarDelegate {
     
+    // MARK: - Properties
     
     var redditPresenter : RedditPresenter!
     
@@ -24,12 +27,13 @@ class RedditListView: UIViewController, UICollectionViewDataSource, UICollection
     
     @IBOutlet weak var collectionView: UICollectionView!
     
+    // MARK: - Functions
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         redditPresenter = RedditPresenter(view: self, redditRepository: RedditRepository())
         createSearchBar()
         collectionView.dataSource = self
-        
         redditPresenter.loadRedditData(keywords: "")
     }
     
@@ -60,19 +64,15 @@ class RedditListView: UIViewController, UICollectionViewDataSource, UICollection
                 cellNumberArray.append(3)
             }
         }
-        print("Inside updateUIWithRedditData, in view: \(anyObject.count)")
         self.anyObject = anyObject
         collectionView.reloadData()
+        Spinner.stop()
     }
     
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let currentObject = anyObject[indexPath.row]
         if let object = currentObject as? RedditDataModel {
-            //            if (reddit[indexPath.row].articleSubtitle == nil ||
-            //                reddit[indexPath.row].articleSubtitle == ""  ||
-            //                reddit[indexPath.row].articleSubtitle == "self" ||
-            //                reddit[indexPath.row].articleSubtitle == "null") {
             if cellNumberArray[indexPath.row] == 0{
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "redditCell3", for: indexPath) as! RedditCVCell3
                 cell.titleLabel.text = (anyObject[indexPath.row] as! RedditDataModel).title
@@ -173,6 +173,14 @@ class RedditListView: UIViewController, UICollectionViewDataSource, UICollection
         let keywords = searchBar.text
         redditPresenter.loadRedditData(keywords: keywords!)
     }
+    var indicator = UIActivityIndicatorView()
+    
+    func activityIndicator() {
+        indicator = UIActivityIndicatorView(frame: CGRect(x:0, y:0, width:40, height:40))
+        indicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+        indicator.center = self.view.center
+        self.view.addSubview(indicator)
+    }
 }
 extension UITabBar {
     override open func sizeThatFits(_ size: CGSize) -> CGSize {
@@ -252,6 +260,28 @@ extension DateFormatter {
         }
         return result
     }
+}
+
+// MARK: - RedditPresenterDelegate
+
+extension RedditListVC: RedditPresenterDelegate {
+    func showLoadingReddit() {
+        SVProgressHUD.show(withStatus: "Loading...")
+    }
+    
+    func showReddit(_ reddits: [RedditDataModel]) {
+        SVProgressHUD.dismiss {
+            self.updateUIWithRedditData(anyObject: reddits)
+        }
+    }
+    
+    func showRedditError(_ errorString: String) {
+        SVProgressHUD.dismiss {
+            SVProgressHUD.showError(withStatus: errorString)
+        }
+    }
+    
+    
 }
 
 

@@ -10,6 +10,7 @@ target 'Reddit-Clone' do
   pod 'SwiftyJSON'
   pod 'Alamofire'
   pod 'Kingfisher', '~> 4.0'
+  pod 'SVProgressHUD'
 end
 # Workaround for Cocoapods issue #7606
 post_install do |installer|
